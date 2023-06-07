@@ -36,7 +36,7 @@ public class TutorialController {
 	}
 	// with cache
 	@GetMapping("/tutorials/{id}")
-	public Tutorial getTutorialById(@PathVariable("id") long id) {
+	public Tutorial getTutorialById(@PathVariable("id") String id) {
 		return tutorialService.getTutorialByIdService(id);
 	}
 	@PostMapping("/tutorials")
@@ -46,13 +46,13 @@ public class TutorialController {
 
 	// with cache
 	@PutMapping("/tutorials/{id}")
-	public Tutorial updateTutorial(@PathVariable("id") long id, @RequestBody Tutorial tutorial) {
+	public Tutorial updateTutorial(@PathVariable("id") String id, @RequestBody Tutorial tutorial) {
 		return tutorialService.updateTutorialService(id, tutorial);
 	}
 
 	// with cache
 	@DeleteMapping("/tutorials/{id}")
-	public List<Tutorial> deleteTutorial(@PathVariable("id") long id) {
+	public List<Tutorial> deleteTutorial(@PathVariable("id") String id) {
 		return tutorialService.deleteTutorialService(id);
 	}
 

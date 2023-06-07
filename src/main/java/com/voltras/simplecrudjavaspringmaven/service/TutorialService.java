@@ -26,7 +26,7 @@ public class TutorialService {
 		if (title == null)
 			tutorialRepository.findAll().forEach(tutorials::add);
 		else
-			tutorialRepository.findByTitleContaining(title).forEach(tutorials::add);
+			tutorialRepository.findByTitle(title).forEach(tutorials::add);
 
 		if (tutorials.isEmpty()) {
 			return null;
@@ -36,7 +36,7 @@ public class TutorialService {
 	}
 
 	@Cacheable("tutorial")
-	public Tutorial getTutorialByIdService(long id) {
+	public Tutorial getTutorialByIdService(String id) {
 		doLongRunningTask();
 
 		Optional<Tutorial> tutorial = tutorialRepository.findById(id);
@@ -55,7 +55,7 @@ public class TutorialService {
 	}
 
 	@CacheEvict(value = "tutorials", allEntries = true)
-	public Tutorial updateTutorialService(long id, Tutorial tutorial) {
+	public Tutorial updateTutorialService(String id, Tutorial tutorial) {
 		Optional<Tutorial> tutorialData = tutorialRepository.findById(id);
 
 		if (tutorialData.isPresent()) {
@@ -70,7 +70,7 @@ public class TutorialService {
 	}
 
 	@CacheEvict(value = "tutorials", allEntries = true)
-	public List<Tutorial> deleteTutorialService(long id) {
+	public List<Tutorial> deleteTutorialService(String id) {
 		tutorialRepository.deleteById(id);
 
 		List<Tutorial> tutorials = new ArrayList<Tutorial>();
