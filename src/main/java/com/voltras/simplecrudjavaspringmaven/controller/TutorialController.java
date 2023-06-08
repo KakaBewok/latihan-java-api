@@ -1,6 +1,7 @@
 package com.voltras.simplecrudjavaspringmaven.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -31,14 +32,18 @@ public class TutorialController {
 
 	// with cache
 	@GetMapping("/tutorials")
-	public List<Tutorial> getAllTutorials(@RequestParam(required = false) String title) {
-		return tutorialService.getAllTutorialsService(title);
+	public Map<String, Object> getAllTutorialsPage(@RequestParam(required = false) String title,
+			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "3") int size) {
+
+		return tutorialService.getAllTutorialsService(title, page, size);
 	}
+
 	// with cache
 	@GetMapping("/tutorials/{id}")
 	public Tutorial getTutorialById(@PathVariable("id") String id) {
 		return tutorialService.getTutorialByIdService(id);
 	}
+
 	@PostMapping("/tutorials")
 	public Tutorial createTutorial(@RequestBody Tutorial tutorial) {
 		return tutorialService.createTutorialService(tutorial);
@@ -64,7 +69,8 @@ public class TutorialController {
 
 	// with cache
 	@GetMapping("/tutorials/published")
-	public List<Tutorial> findByPublished() {
-		return tutorialService.findByPublished();
+	public Map<String, Object> findByPublished(@RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "3") int size) {
+		return tutorialService.findByPublished(page, size);
 	}
 }

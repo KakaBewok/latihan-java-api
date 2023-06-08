@@ -1,12 +1,17 @@
 package com.voltras.simplecrudjavaspringmaven.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.voltras.simplecrudjavaspringmaven.model.Tutorial;
@@ -18,21 +23,34 @@ public class TutorialService {
 	TutorialRepository tutorialRepository;
 
 	@Cacheable("tutorials")
-	public List<Tutorial> getAllTutorialsService(String title) {
+	public Map<String, Object> getAllTutorialsService(String title, int page, int size) {
 		doLongRunningTask();
 
-		List<Tutorial> tutorials = new ArrayList<Tutorial>();
+		Map<String, Object> response = new HashMap<>();
 
-		if (title == null)
-			tutorialRepository.findAll().forEach(tutorials::add);
-		else
-			tutorialRepository.findByTitle(title).forEach(tutorials::add);
+		try {
+			List<Tutorial> tutorials = new ArrayList<Tutorial>();
 
-		if (tutorials.isEmpty()) {
-			return null;
+			Pageable paging = PageRequest.of(page, size);
+
+			Page<Tutorial> pageTuts;
+
+			if (title == null)
+				pageTuts = tutorialRepository.findAll(paging);
+			else
+				pageTuts = tutorialRepository.findByTitleContainingIgnoreCase(title, paging);
+
+			tutorials = pageTuts.getContent();
+
+			response.put("tutorials", tutorials);
+			response.put("currentPage", pageTuts.getNumber());
+			response.put("totalItems", pageTuts.getTotalElements());
+			response.put("totalPages", pageTuts.getTotalPages());
+
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-
-		return tutorials;
+		return response;
 	}
 
 	@Cacheable("tutorial")
@@ -86,15 +104,31 @@ public class TutorialService {
 	}
 
 	@Cacheable("tutorials_published")
-	public List<Tutorial> findByPublished() {
+	public Map<String, Object> findByPublished(int page, int size) {
 		doLongRunningTask();
+		
+		Map<String, Object> response = new HashMap<>();
 
-		List<Tutorial> tutorials = tutorialRepository.findByPublished(true);
+		try {
+			List<Tutorial> tutorials = new ArrayList<Tutorial>();
+			Pageable paging = PageRequest.of(page, size);
 
-		if (tutorials.isEmpty()) {
-			return null;
+			Page<Tutorial> pageTuts = tutorialRepository.findByPublished(true, paging);
+			tutorials = pageTuts.getContent();
+
+			if (tutorials.isEmpty()) {
+				return null;
+			}
+
+			response.put("tutorials", tutorials);
+			response.put("currentPage", pageTuts.getNumber());
+			response.put("totalItems", pageTuts.getTotalElements());
+			response.put("totalPages", pageTuts.getTotalPages());
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		return tutorials;
+		
+		return response;
 	}
 
 	private void doLongRunningTask() {
