@@ -1,14 +1,15 @@
 package com.voltras.simplecrudjavaspringmaven.repository;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.mongodb.repository.MongoRepository;
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import com.voltras.simplecrudjavaspringmaven.model.Tutorial;
 
-public interface TutorialRepository extends MongoRepository<Tutorial, String> {
+@Repository
+public interface TutorialRepository extends JpaRepository<Tutorial, Long> {
+	List<Tutorial> findByPublished(boolean published);
 
-	Page<Tutorial> findByTitleContainingIgnoreCase(String title, org.springframework.data.domain.Pageable pageable);
-
-	Page<Tutorial> findByPublished(boolean published, org.springframework.data.domain.Pageable pageable);
-
+	List<Tutorial> findByTitleContaining(String title);
 }

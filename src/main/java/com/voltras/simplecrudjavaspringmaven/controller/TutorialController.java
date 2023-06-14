@@ -1,9 +1,11 @@
 package com.voltras.simplecrudjavaspringmaven.controller;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,11 +17,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.voltras.simplecrudjavaspringmaven.exception.ResourceNotFoundException;
 import com.voltras.simplecrudjavaspringmaven.model.Tutorial;
+import com.voltras.simplecrudjavaspringmaven.repository.TutorialDetailsRepository;
 import com.voltras.simplecrudjavaspringmaven.repository.TutorialRepository;
-import com.voltras.simplecrudjavaspringmaven.service.TutorialService;
 
-@CrossOrigin(origins = "http://localhost:8080")
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api")
 public class TutorialController {
@@ -28,49 +31,77 @@ public class TutorialController {
 	TutorialRepository tutorialRepository;
 
 	@Autowired
-	TutorialService tutorialService;
+	private TutorialDetailsRepository detailsRepository;
 
-	// with cache
 	@GetMapping("/tutorials")
-	public Map<String, Object> getAllTutorialsPage(@RequestParam(required = false) String title,
-			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "3") int size) {
+	public ResponseEntity<List<Tutorial>> getAllTutorials(@RequestParam(required = false) String title) {
+		List<Tutorial> tutorials = new ArrayList<Tutorial>();
 
-		return tutorialService.getAllTutorialsService(title, page, size);
+		if (title == null)
+			tutorialRepository.findAll().forEach(tutorials::add);
+		else
+			tutorialRepository.findByTitleContaining(title).forEach(tutorials::add);
+
+		if (tutorials.isEmpty()) {
+			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+		}
+
+		return new ResponseEntity<>(tutorials, HttpStatus.OK);
 	}
 
-	// with cache
 	@GetMapping("/tutorials/{id}")
-	public Tutorial getTutorialById(@PathVariable("id") String id) {
-		return tutorialService.getTutorialByIdService(id);
+	public ResponseEntity<Tutorial> getTutorialById(@PathVariable("id") long id) {
+		Tutorial tutorial = tutorialRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Not found Tutorial with id = " + id));
+
+		return new ResponseEntity<>(tutorial, HttpStatus.OK);
 	}
 
 	@PostMapping("/tutorials")
-	public Tutorial createTutorial(@RequestBody Tutorial tutorial) {
-		return tutorialService.createTutorialService(tutorial);
+	public ResponseEntity<Tutorial> createTutorial(@RequestBody Tutorial tutorial) {
+		Tutorial _tutorial = tutorialRepository
+				.save(new Tutorial(tutorial.getTitle(), tutorial.getDescription(), true));
+		return new ResponseEntity<>(_tutorial, HttpStatus.CREATED);
 	}
 
-	// with cache
 	@PutMapping("/tutorials/{id}")
-	public Tutorial updateTutorial(@PathVariable("id") String id, @RequestBody Tutorial tutorial) {
-		return tutorialService.updateTutorialService(id, tutorial);
+	public ResponseEntity<Tutorial> updateTutorial(@PathVariable("id") long id, @RequestBody Tutorial tutorial) {
+		Tutorial _tutorial = tutorialRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Not found Tutorial with id = " + id));
+
+		_tutorial.setTitle(tutorial.getTitle());
+		_tutorial.setDescription(tutorial.getDescription());
+		_tutorial.setPublished(tutorial.isPublished());
+
+		return new ResponseEntity<>(tutorialRepository.save(_tutorial), HttpStatus.OK);
 	}
 
-	// with cache
 	@DeleteMapping("/tutorials/{id}")
-	public List<Tutorial> deleteTutorial(@PathVariable("id") String id) {
-		return tutorialService.deleteTutorialService(id);
+	public ResponseEntity<HttpStatus> deleteTutorial(@PathVariable("id") long id) {
+		if (detailsRepository.existsById(id)) {
+			detailsRepository.deleteById(id);
+		}
+
+		tutorialRepository.deleteById(id);
+
+		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	}
 
-	// with cache
 	@DeleteMapping("/tutorials")
-	public void deleteAllTutorials() {
-		tutorialService.deleteAllTutorialsService();
+	public ResponseEntity<HttpStatus> deleteAllTutorials() {
+		tutorialRepository.deleteAll();
+
+		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	}
 
-	// with cache
 	@GetMapping("/tutorials/published")
-	public Map<String, Object> findByPublished(@RequestParam(defaultValue = "0") int page,
-			@RequestParam(defaultValue = "3") int size) {
-		return tutorialService.findByPublished(page, size);
+	public ResponseEntity<List<Tutorial>> findByPublished() {
+		List<Tutorial> tutorials = tutorialRepository.findByPublished(true);
+
+		if (tutorials.isEmpty()) {
+			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+		}
+
+		return new ResponseEntity<>(tutorials, HttpStatus.OK);
 	}
 }

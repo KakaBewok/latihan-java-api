@@ -1,11 +1,13 @@
 package com.voltras.simplecrudjavaspringmaven.model;
 
-import java.util.UUID;
+ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import org.springframework.data.mongodb.core.mapping.Document;
-
-// for Spring Boot 3
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,25 +15,27 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Document(collection = "tutorial")
+@JsonIgnoreProperties({"hibernateLazyInitializer"})
+@Entity
+@Table(name = "tutorials")
 public class Tutorial {
 
-	@Id
-	private String id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private long id;
 
-	private String title;
+  @Column(name = "title")
+  private String title;
 
-	private String description;
+  @Column(name = "description")
+  private String description;
 
-	private boolean published;
-
-	public Tutorial(String title, String description, boolean published) {
-		super();
-		this.setId(UUID.randomUUID().toString());
-		this.title = title;
-		this.description = description;
-		this.published = published;
-	}
-
-	
+  @Column(name = "published")
+  private boolean published;
+  
+  public Tutorial(String title, String description, boolean published) {
+    this.title = title;
+    this.description = description;
+    this.published = published;
+  }
 }
