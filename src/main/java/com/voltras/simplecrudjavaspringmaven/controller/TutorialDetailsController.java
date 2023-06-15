@@ -1,8 +1,6 @@
 package com.voltras.simplecrudjavaspringmaven.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,71 +10,50 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.voltras.simplecrudjavaspringmaven.exception.ResourceNotFoundException;
-import com.voltras.simplecrudjavaspringmaven.model.Tutorial;
 import com.voltras.simplecrudjavaspringmaven.model.TutorialDetails;
-import com.voltras.simplecrudjavaspringmaven.repository.TutorialDetailsRepository;
-import com.voltras.simplecrudjavaspringmaven.repository.TutorialRepository;
+import com.voltras.simplecrudjavaspringmaven.service.TutorialDetailsService;
 
 @CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api")
 public class TutorialDetailsController {
+	
 	@Autowired
-	private TutorialDetailsRepository detailsRepository;
+	private TutorialDetailsService tutorialDetailsService;
 
-	@Autowired
-	private TutorialRepository tutorialRepository;
-
+	//done
 	@GetMapping({ "/details/{id}", "/tutorials/{id}/details" })
-	public ResponseEntity<TutorialDetails> getDetailsById(@PathVariable(value = "id") Long id) {
-		TutorialDetails details = detailsRepository.findById(id)
-				.orElseThrow(() -> new ResourceNotFoundException("Not found Tutorial Details with id = " + id));
-
-		return new ResponseEntity<>(details, HttpStatus.OK);
+	public TutorialDetails getDetailsById(@PathVariable(value = "id") Long id) {
+		return tutorialDetailsService.getDetailsByIdService(id);
 	}
 
+	//done
 	@PostMapping("/tutorials/{tutorialId}/details")
-	public ResponseEntity<TutorialDetails> createDetails(@PathVariable(value = "tutorialId") Long tutorialId,
+	public TutorialDetails createDetails(@PathVariable(value = "tutorialId") Long tutorialId,
 			@RequestBody TutorialDetails detailsRequest) {
 		
-		Tutorial tutorial = tutorialRepository.findById(tutorialId)
-				.orElseThrow(() -> new ResourceNotFoundException("Not found Tutorial with id = " + tutorialId));
-
-		detailsRequest.setCreatedOn(new java.util.Date());
-		detailsRequest.setTutorial(tutorial);
-		TutorialDetails details = detailsRepository.save(detailsRequest);
-
-		return new ResponseEntity<>(details, HttpStatus.CREATED);
+		return tutorialDetailsService.createDetailsService(tutorialId, detailsRequest);
 	}
 
+	//done
 	@PutMapping("/details/{id}")
-	public ResponseEntity<TutorialDetails> updateDetails(@PathVariable("id") long id,
+	public TutorialDetails updateDetails(@PathVariable("id") Long id,
 			@RequestBody TutorialDetails detailsRequest) {
-		TutorialDetails details = detailsRepository.findById(id)
-				.orElseThrow(() -> new ResourceNotFoundException("Id " + id + " not found"));
-
-		details.setCreatedBy(detailsRequest.getCreatedBy());
-
-		return new ResponseEntity<>(detailsRepository.save(details), HttpStatus.OK);
+		
+		return tutorialDetailsService.updateDetailsService(id, detailsRequest);
 	}
 
+	//done
 	@DeleteMapping("/details/{id}")
-	public ResponseEntity<HttpStatus> deleteDetails(@PathVariable("id") long id) {
-		detailsRepository.deleteById(id);
-
-		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+	public void deleteDetails(@PathVariable("id") Long id) {
+		tutorialDetailsService.deleteDetailsService(id);
 	}
 
+	//done
 	@DeleteMapping("/tutorials/{tutorialId}/details")
-	public ResponseEntity<TutorialDetails> deleteDetailsOfTutorial(
+	public void deleteDetailsOfTutorial(
 			@PathVariable(value = "tutorialId") Long tutorialId) {
-		if (!tutorialRepository.existsById(tutorialId)) {
-			throw new ResourceNotFoundException("Not found Tutorial with id = " + tutorialId);
-		}
-
-		detailsRepository.deleteByTutorialId(tutorialId);
-		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+		
+		tutorialDetailsService.deleteDetailsOfTutorialService(tutorialId);
 	}
 }
